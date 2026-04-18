@@ -50,7 +50,14 @@ function resetUI(){
   nextBtn.textContent = "回答";
   nextBtn.disabled = true;
 
-  textBox.classList.add("hidden");
+  textBox.classList.remove("correct");
+textBox.classList.remove("wrong");
+
+if(ok){
+  textBox.classList.add("correct");
+} else {
+  textBox.classList.add("wrong");
+}
   textBox.classList.remove("correct","wrong");
 
   document.getElementById("text-input").value = "";
