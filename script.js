@@ -2,13 +2,15 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbwvMREPiX2WvxVxKQD6eh13
 
 let quiz = [];
 let current = 0;
-let score = 0;
+
+let scoreChoice = 0;
+let scoreText = 0;
+let totalText = 0;
 
 let selectedIndex = null;
-let answered = false;
+let state = "choice";
 
 let answersLog = [];
-let userName = "";
 
 /* DOM */
 const qEl = document.getElementById("question");
@@ -22,14 +24,8 @@ const progress = document.getElementById("progress");
    開始
 ===================== */
 function startQuiz(){
-  const name = document.getElementById("username").value.trim();
-  if(!name) return alert("名前入れて");
-
-  userName = name;
-
   document.getElementById("name-box").classList.add("hidden");
   document.getElementById("quiz-box").classList.remove("hidden");
-
   init();
 }
 
@@ -38,35 +34,34 @@ function startQuiz(){
 ===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
-
-  nextBtn.classList.add("hidden");
-
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
-
   load();
 }
 
 /* =====================
-   問題表示
+   初期化
 ===================== */
-function load(){
-  answered = false;
+function resetUI(){
   selectedIndex = null;
+  state = "choice";
 
   nextBtn.classList.add("hidden");
-  nextBtn.classList.remove("waiting");
-  nextBtn.disabled = true;
   nextBtn.textContent = "回答";
+  nextBtn.disabled = true;
 
-  // 記述リセット
-  textBox.classList.remove("correct");
-  textBox.classList.remove("wrong");
   textBox.classList.add("hidden");
+  textBox.classList.remove("correct","wrong");
 
-  const input = document.getElementById("text-input");
-  input.value = "";
-  input.disabled = false;
+  document.getElementById("text-input").value = "";
+  document.getElementById("text-input").disabled = false;
+}
+
+/* =====================
+   表示
+===================== */
+function load(){
+  resetUI();
 
   const q = quiz[current];
 
@@ -78,7 +73,7 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
-      if(answered) return;
+      if(state !== "choice") return;
 
       selectedIndex = i;
 
@@ -96,27 +91,28 @@ function load(){
 }
 
 /* =====================
-   回答
+   メイン
 ===================== */
 function next(){
   const q = quiz[current];
 
-  if(!answered){
+  /* =====================
+     選択回答
+  ===================== */
+  if(state === "choice"){
 
     if(selectedIndex === null) return;
 
-    answered = true;
-
     const isCorrect = selectedIndex === q.correct;
-    if(isCorrect) score++;
 
     answersLog.push({
       id: q.id,
       type: "choice",
-      question: q.q,
       input: q.choices[selectedIndex],
       correct: isCorrect
     });
+
+    if(isCorrect) scoreChoice++;
 
     const buttons = [...cEl.children];
 
@@ -132,43 +128,43 @@ function next(){
       }
     });
 
-    /* trigger */
-    const raw = String(q.trigger ?? "").trim();
-    const triggerIndex = /^[0-9]+$/.test(raw) ? Number(raw) : null;
+    /* =====================
+       記述ありチェック
+    ===================== */
+    const hasText = q.textQ && q.textQ.trim() !== "";
 
-    const needText =
-      triggerIndex !== null &&
-      selectedIndex === triggerIndex;
+    if(hasText){
+      state = "text";
 
-    if(needText){
       textBox.classList.remove("hidden");
-
       document.getElementById("text-input").focus();
 
-      nextBtn.classList.add("waiting");
-      nextBtn.textContent = "回答待ち";
-      nextBtn.disabled = true;
-
+      nextBtn.classList.add("hidden");
       return;
     }
 
+    state = "done";
     nextBtn.textContent = "次へ";
     nextBtn.disabled = false;
 
     return;
   }
 
-  current++;
-
-  if(current >= quiz.length){
-    finish();
-  } else {
-    load();
+  /* =====================
+     次へ
+  ===================== */
+  if(state === "done"){
+    current++;
+    if(current >= quiz.length){
+      finish();
+    } else {
+      load();
+    }
   }
 }
 
 /* =====================
-   記述
+   記述回答
 ===================== */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
@@ -183,21 +179,22 @@ function submitText(){
   answersLog.push({
     id: q.id,
     type: "text",
-    question: q.textQ,
     input: val,
     correct: ok
   });
 
-  if(ok) score++;
+  totalText++;
+  if(ok) scoreText++;
 
   document.getElementById("text-input").disabled = true;
 
-  textBox.classList.remove("correct","wrong");
   textBox.classList.add(ok ? "correct" : "wrong");
 
-  nextBtn.disabled = false;
+  state = "done";
+
+  nextBtn.classList.remove("hidden");
   nextBtn.textContent = "次へ";
-  nextBtn.classList.remove("waiting");
+  nextBtn.disabled = false;
 }
 
 /* =====================
@@ -215,12 +212,16 @@ function finish(){
   document.getElementById("quiz-box").classList.add("hidden");
   result.classList.remove("hidden");
 
-  const rate = Math.round((score / quiz.length) * 100);
+  const total = quiz.length;
+  const totalCorrect = scoreChoice + scoreText;
+
+  const rate = Math.round((totalCorrect / (total + totalText)) * 100);
 
   result.innerHTML = `
     <h2>結果</h2>
     正答率: ${rate}%<br>
-    (${score}/${quiz.length})
+    選択: ${scoreChoice}/${total}<br>
+    記述: ${scoreText}/${totalText}
   `;
 }
 
