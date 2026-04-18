@@ -5,8 +5,7 @@ let current = 0;
 let score = 0;
 
 let selectedIndex = null;
-let answered = false;
-let textMode = false;
+let state = "choice"; // ←これが全ての中心
 
 let answersLog = [];
 let userName = "";
@@ -45,21 +44,27 @@ async function init(){
 }
 
 /* =====================
-   問題表示
+   初期化
 ===================== */
-function load(){
-  answered = false;
-  textMode = false;
+function resetUI(){
   selectedIndex = null;
+  state = "choice";
 
-  nextBtn.textContent = "回答";
   nextBtn.disabled = true;
+  nextBtn.textContent = "回答";
 
   textBox.classList.add("hidden");
 
   const input = document.getElementById("text-input");
   input.value = "";
   input.disabled = false;
+}
+
+/* =====================
+   問題表示
+===================== */
+function load(){
+  resetUI();
 
   const q = quiz[current];
 
@@ -71,7 +76,7 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
-      if(answered) return;
+      if(state !== "choice") return;
 
       selectedIndex = i;
 
@@ -88,19 +93,19 @@ function load(){
 }
 
 /* =====================
-   回答 / 次へ
+   メイン処理
 ===================== */
 function next(){
   const q = quiz[current];
 
   /* =====================
-     未回答 → 回答確定
+     回答確定
   ===================== */
-  if(!answered){
+  if(state === "choice"){
 
     if(selectedIndex === null) return;
 
-    answered = true;
+    state = "answered";
 
     const isCorrect = selectedIndex === q.correct;
     if(isCorrect) score++;
@@ -112,9 +117,6 @@ function next(){
       input: q.choices[selectedIndex],
       correct: isCorrect
     });
-
-    const triggerIndex = Number(q.trigger);
-    const needText = Number.isInteger(triggerIndex) && selectedIndex === triggerIndex;
 
     const buttons = [...cEl.children];
 
@@ -130,11 +132,11 @@ function next(){
       }
     });
 
-    /* =====================
-       記述モード
-    ===================== */
+    const triggerIndex = Number(q.trigger);
+    const needText = Number.isInteger(triggerIndex) && selectedIndex === triggerIndex;
+
     if(needText){
-      textMode = true;
+      state = "text";
 
       textBox.classList.remove("hidden");
       document.getElementById("text-input").focus();
@@ -145,9 +147,7 @@ function next(){
       return;
     }
 
-    /* =====================
-       記述なし通常
-    ===================== */
+    state = "answered";
     nextBtn.textContent = "次へ";
     nextBtn.disabled = false;
 
@@ -155,14 +155,16 @@ function next(){
   }
 
   /* =====================
-     次へ進む
+     次へ
   ===================== */
-  current++;
+  if(state === "answered" || state === "textAnswered"){
+    current++;
 
-  if(current >= quiz.length){
-    finish();
-  } else {
-    load();
+    if(current >= quiz.length){
+      finish();
+    } else {
+      load();
+    }
   }
 }
 
@@ -194,6 +196,8 @@ function submitText(){
   textBox.style.border = ok
     ? "2px solid #3ddc97"
     : "2px solid #ff6b6b";
+
+  state = "textAnswered";
 
   nextBtn.disabled = false;
   nextBtn.textContent = "次へ";
