@@ -1,12 +1,11 @@
 body {
   margin: 0;
-  font-family: "Helvetica Neue", sans-serif;
-  background: linear-gradient(180deg, #f7f8ff, #ffffff);
+  font-family: sans-serif;
+  background: #f7f8ff;
   color: #333;
-  transition: 0.3s;
 }
 
-/* 全体レイアウト */
+/* レイアウト */
 .container {
   max-width: 420px;
   height: 100vh;
@@ -25,72 +24,51 @@ h1 {
   margin-bottom: 20px;
 }
 
-/* 名前入力 */
-#name-box {
-  text-align: center;
-}
-
+/* 入力 */
 input {
+  width: 100%;
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  width: 80%;
-  max-width: 300px;
-  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 10px;
 }
 
-/* ボタン共通 */
+/* ボタン */
 button {
+  width: 100%;
   padding: 12px;
   border-radius: 12px;
   border: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
-}
-
-/* 開始・回答ボタン */
-#next {
-  width: 100%;
-  margin-top: 12px;
   background: #6c7cff;
   color: white;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-#next:hover {
-  transform: scale(1.02);
+/* 無効ボタン */
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-/* クイズボックス */
-#quiz-box {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 問題文 */
+/* 問題 */
 #question {
   font-size: 18px;
   margin-bottom: 16px;
-  line-height: 1.4;
 }
 
-/* 選択肢エリア */
-#choices {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* 選択肢ボタン */
+/* 選択肢 */
 #choices button {
   width: 100%;
+  margin-top: 10px;
   padding: 12px;
   border-radius: 12px;
   border: none;
-  background: #f2f3ff;
+  background: #fff;
+  border: 1px solid #ddd;
   color: #333;
-  font-size: 14px;
-  transition: 0.2s;
+  transition: 0.15s;
 }
 
 /* hover */
@@ -102,34 +80,25 @@ button {
 .selected {
   background: #6c7cff !important;
   color: white;
+  border: none;
 }
 
-/* 正解 */
+/* 正解（控えめ） */
 .correct {
-  background: #3ddc97 !important;
-  color: white;
+  border: 2px solid #3ddc97 !important;
 }
 
-/* 不正解 */
+/* 不正解（控えめ） */
 .wrong {
-  background: #ff6b6b !important;
-  color: white;
+  border: 2px solid #ff6b6b !important;
 }
 
-/* 記述入力 */
+/* 記述 */
 #text-box {
   margin-top: 12px;
 }
 
-#text-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  margin-bottom: 8px;
-}
-
-/* プログレスバー外枠 */
+/* プログレス */
 .progress-wrap {
   width: 100%;
   height: 6px;
@@ -139,46 +108,14 @@ button {
   overflow: hidden;
 }
 
-/* プログレス本体 */
 #progress {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #6c7cff, #9b7bff);
+  background: #6c7cff;
   transition: 0.3s;
-}
-
-/* 結果画面 */
-#result {
-  text-align: center;
-  font-size: 18px;
-  line-height: 1.6;
 }
 
 /* 非表示 */
 .hidden {
   display: none;
-}
-
-/* ===== 画面全体フィードバック ===== */
-body.correct {
-  background: linear-gradient(135deg, #d4f8e8, #ffffff);
-}
-
-body.wrong {
-  background: linear-gradient(135deg, #ffd6d6, #ffffff);
-}
-
-/* モバイル最適化 */
-@media (max-width: 480px) {
-  .container {
-    padding: 12px;
-  }
-
-  #question {
-    font-size: 16px;
-  }
-
-  button {
-    font-size: 14px;
-  }
 }
