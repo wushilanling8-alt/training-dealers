@@ -31,6 +31,7 @@ input {
   margin-bottom: 10px;
 }
 
+/* 共通ボタン */
 button {
   width: 100%;
   padding: 12px;
@@ -39,12 +40,7 @@ button {
   background: #6c7cff;
   color: white;
   font-weight: bold;
-}
-
-/* 問題 */
-#question {
-  font-size: 18px;
-  margin-bottom: 16px;
+  cursor: pointer;
 }
 
 /* 選択肢 */
@@ -53,29 +49,35 @@ button {
   margin-top: 10px;
   padding: 12px;
   border-radius: 12px;
-  border: none;
+  border: 2px solid transparent;
   background: white;
-  border: 1px solid #ddd;
-  transition: 0.15s;
+  color: #333;
+  transition: 0.2s;
 }
 
-/* 選択中 */
+/* =========================
+   👇 選択中（枠が光る）
+========================= */
 .selected {
-  background: #6c7cff !important;
-  color: white;
+  border-color: #6c7cff;
+  box-shadow: 0 0 0 3px rgba(108,124,255,0.25);
 }
 
-/* 正解（押したものだけ） */
+/* =========================
+   👇 正解（ボタン自体が発光）
+========================= */
 .correct {
   background: #3ddc97 !important;
-  color: white;
+  color: white !important;
   border: none !important;
+  box-shadow: 0 0 18px rgba(61,220,151,0.6);
+  transform: scale(1.02);
 }
 
-/* 不正解（押したものだけ） */
+/* 不正解（控えめ） */
 .wrong {
   background: #ff6b6b !important;
-  color: white;
+  color: white !important;
   border: none !important;
 }
 
