@@ -5,18 +5,25 @@ let current = 0;
 let score = 0;
 
 let selectedIndex = null;
-let state = "choice"; // ←これが全ての中心
+let answered = false;
 
 let answersLog = [];
 let userName = "";
 
-/* DOM */
+/* =====================
+   DOM
+===================== */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
 const textBox = document.getElementById("text-box");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
+
+/* =====================
+   初期状態（読み込み中対策）
+===================== */
+nextBtn.classList.add("hidden");
 
 /* =====================
    開始
@@ -38,18 +45,23 @@ function startQuiz(){
 ===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
+
+  nextBtn.classList.add("hidden"); // ★読み込み中完全非表示
+
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
+
   load();
 }
 
 /* =====================
-   初期化
+   問題表示
 ===================== */
-function resetUI(){
+function load(){
+  answered = false;
   selectedIndex = null;
-  state = "choice";
 
+  nextBtn.classList.add("hidden"); // ★毎回リセット
   nextBtn.disabled = true;
   nextBtn.textContent = "回答";
 
@@ -58,13 +70,6 @@ function resetUI(){
   const input = document.getElementById("text-input");
   input.value = "";
   input.disabled = false;
-}
-
-/* =====================
-   問題表示
-===================== */
-function load(){
-  resetUI();
 
   const q = quiz[current];
 
@@ -76,13 +81,14 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
-      if(state !== "choice") return;
+      if(answered) return;
 
       selectedIndex = i;
 
       [...cEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
+      nextBtn.classList.remove("hidden"); // ★ここで初表示
       nextBtn.disabled = false;
     };
 
@@ -93,19 +99,16 @@ function load(){
 }
 
 /* =====================
-   メイン処理
+   回答処理
 ===================== */
 function next(){
   const q = quiz[current];
 
-  /* =====================
-     回答確定
-  ===================== */
-  if(state === "choice"){
+  if(!answered){
 
     if(selectedIndex === null) return;
 
-    state = "answered";
+    answered = true;
 
     const isCorrect = selectedIndex === q.correct;
     if(isCorrect) score++;
@@ -132,21 +135,17 @@ function next(){
       }
     });
 
-   const triggerRaw = String(q.trigger ?? "").trim();
+    /* =====================
+       trigger安全処理（完全版）
+    ===================== */
+    const raw = String(q.trigger ?? "").trim();
+    const triggerIndex = /^[0-9]+$/.test(raw) ? Number(raw) : null;
 
-// 数字だけ許可
-const triggerIndex = /^[0-9]+$/.test(triggerRaw)
-  ? Number(triggerRaw)
-  : null;
-
-const needText =
-  triggerIndex !== null &&
-  selectedIndex === triggerIndex;
-    const needText = Number.isInteger(triggerIndex) && selectedIndex === triggerIndex;
+    const needText =
+      triggerIndex !== null &&
+      selectedIndex === triggerIndex;
 
     if(needText){
-      state = "text";
-
       textBox.classList.remove("hidden");
       document.getElementById("text-input").focus();
 
@@ -156,24 +155,18 @@ const needText =
       return;
     }
 
-    state = "answered";
     nextBtn.textContent = "次へ";
     nextBtn.disabled = false;
 
     return;
   }
 
-  /* =====================
-     次へ
-  ===================== */
-  if(state === "answered" || state === "textAnswered"){
-    current++;
+  current++;
 
-    if(current >= quiz.length){
-      finish();
-    } else {
-      load();
-    }
+  if(current >= quiz.length){
+    finish();
+  } else {
+    load();
   }
 }
 
@@ -205,8 +198,6 @@ function submitText(){
   textBox.style.border = ok
     ? "2px solid #3ddc97"
     : "2px solid #ff6b6b";
-
-  state = "textAnswered";
 
   nextBtn.disabled = false;
   nextBtn.textContent = "次へ";
