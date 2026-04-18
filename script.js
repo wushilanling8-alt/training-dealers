@@ -132,7 +132,16 @@ function next(){
       }
     });
 
-    const triggerIndex = Number(q.trigger);
+   const triggerRaw = String(q.trigger ?? "").trim();
+
+// 数字だけ許可
+const triggerIndex = /^[0-9]+$/.test(triggerRaw)
+  ? Number(triggerRaw)
+  : null;
+
+const needText =
+  triggerIndex !== null &&
+  selectedIndex === triggerIndex;
     const needText = Number.isInteger(triggerIndex) && selectedIndex === triggerIndex;
 
     if(needText){
