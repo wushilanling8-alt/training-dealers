@@ -4,16 +4,13 @@ let quiz = [];
 let current = 0;
 
 let selectedIndex = null;
+let phase = "select";
 
 let answersLog = [];
 
 let scoreChoice = 0;
 let scoreText = 0;
 let totalText = 0;
-
-/* state管理 */
-let phase = "select"; 
-// select → text → answer → done
 
 /* DOM */
 const qEl = document.getElementById("question");
@@ -53,6 +50,7 @@ function resetUI(){
   phase = "select";
 
   nextBtn.classList.add("hidden");
+
   textBox.classList.add("hidden");
   textBox.classList.remove("correct","wrong");
 
@@ -86,9 +84,7 @@ function load(){
       const trigger = (q.trigger ?? "").toString().trim();
       const selected = selectedIndex.toString();
 
-      /* =====================
-         記述あり → text表示
-      ===================== */
+      /* 記述あり */
       if(trigger !== "" && trigger === selected){
         phase = "text";
 
@@ -98,7 +94,6 @@ function load(){
         return;
       }
 
-      /* 記述なし → 即回答ボタン表示 */
       showAnswerButton();
     };
 
@@ -115,24 +110,23 @@ function showAnswerButton(){
   phase = "answer";
 
   nextBtn.classList.remove("hidden");
-  nextBtn.textContent = "回答";
+  nextBtn.textContent = "回答確定";
   nextBtn.disabled = false;
 }
 
 /* =====================
-   回答処理
+   回答確定
 ===================== */
 function next(){
   submitAll();
 }
 
 /* =====================
-   最終確定
+   最終処理（ここが修正ポイント）
 ===================== */
 function submitAll(){
   const q = quiz[current];
 
-  /* 選択判定 */
   const isChoiceCorrect = selectedIndex === q.correct;
   if(isChoiceCorrect) scoreChoice++;
 
@@ -143,7 +137,6 @@ function submitAll(){
     correct: isChoiceCorrect
   });
 
-  /* 記述がある場合のみ判定 */
   const trigger = (q.trigger ?? "").toString().trim();
 
   if(trigger !== ""){
@@ -167,7 +160,22 @@ function submitAll(){
     });
   }
 
-  /* 次へ */
+  /* =====================
+     ★ここ重要：次へボタンを必ず出す
+  ===================== */
+  phase = "done";
+
+  nextBtn.classList.remove("hidden");
+  nextBtn.textContent = "次へ";
+  nextBtn.disabled = false;
+
+  nextBtn.onclick = goNext;
+}
+
+/* =====================
+   次へ進行
+===================== */
+function goNext(){
   current++;
 
   if(current >= quiz.length){
@@ -175,6 +183,8 @@ function submitAll(){
   } else {
     load();
   }
+
+  nextBtn.onclick = next;
 }
 
 /* =====================
