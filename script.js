@@ -43,7 +43,7 @@ async function init(){
 }
 
 /* =====================
-   UIリセット
+   リセット
 ===================== */
 function resetUI(){
   selectedIndex = null;
@@ -130,29 +130,13 @@ function next(){
     });
 
     /* =====================
-       ★trigger完全厳密判定
+       ★ここが修正ポイント
+       F列そのまま比較
     ===================== */
-    const triggerRaw = q.trigger;
+    const trigger = (q.trigger ?? "").toString().trim();
+    const selected = selectedIndex.toString();
 
-    // 記述なし
-    if(triggerRaw === undefined || triggerRaw === null || triggerRaw === ""){
-      state = "done";
-      nextBtn.textContent = "次へ";
-      nextBtn.disabled = false;
-      return;
-    }
-
-    const triggerIndex = parseInt(triggerRaw, 10);
-
-    if(isNaN(triggerIndex)){
-      state = "done";
-      nextBtn.textContent = "次へ";
-      nextBtn.disabled = false;
-      return;
-    }
-
-    // ★ここが正しい条件
-    const needText = (selectedIndex === triggerIndex);
+    const needText = (trigger !== "" && selected === trigger);
 
     if(needText){
       state = "text";
@@ -182,7 +166,7 @@ function next(){
 }
 
 /* =====================
-   記述回答
+   記述
 ===================== */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
@@ -246,7 +230,6 @@ function finish(){
   `;
 }
 
-/* expose */
 window.startQuiz = startQuiz;
 window.next = next;
 window.submitText = submitText;
