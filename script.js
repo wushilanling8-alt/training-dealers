@@ -1,14 +1,16 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwrUjxTJlBgwBDZ_1vsX_d6s6yx5STNFnrald4mJu2pS1WaA0zObpagFgGUq-7vCPxltA/exec";
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwF92XKX_im2BqGx8pz8VbzjDjc8pzS7z1AGA79h_NjMgdfhjbUOH4gHbPnIwansRcH4A/exec";
 
 let quiz = [];
 let current = 0;
 
 let selectedIndex = null;
-let textVisible = false;
+let state = "select";
 
 let scoreChoice = 0;
 
-let answersLog = [];
+let userName = "";
+let logBuffer = [];
 
 /* DOM */
 const qEl = document.getElementById("question");
@@ -23,8 +25,12 @@ const progress = document.getElementById("progress");
    開始
 ===================== */
 function startQuiz(){
+  userName = document.getElementById("username").value.trim();
+  if(!userName) return alert("名前入れて");
+
   document.getElementById("name-box").classList.add("hidden");
   document.getElementById("quiz-box").classList.remove("hidden");
+
   init();
 }
 
@@ -41,23 +47,26 @@ async function init(){
 /* =====================
    初期化
 ===================== */
-function resetUI(){
+function reset(){
   selectedIndex = null;
-  textVisible = false;
-
-  nextBtn.classList.add("hidden");
-  inputEl.value = "";
+  state = "select";
 
   textBox.classList.add("hidden");
+  inputEl.value = "";
 
-  nextBtn.onclick = submitAll;
+  nextBtn.classList.add("hidden");
+  nextBtn.textContent = "回答";
+
+  [...cEl.children].forEach(b=>{
+    b.classList.remove("selected","correct","wrong");
+  });
 }
 
 /* =====================
    表示
 ===================== */
 function load(){
-  resetUI();
+  reset();
 
   const q = quiz[current];
 
@@ -77,14 +86,15 @@ function load(){
 
       btn.classList.add("selected");
 
-      const trigger = (q.trigger ?? "").toString().trim();
+      const trigger = (q.trigger || "").toString().trim();
 
       if(trigger !== "" && trigger === String(i)){
-        showText();
+        textBox.classList.remove("hidden");
       } else {
-        hideText();
-        showAnswer();
+        textBox.classList.add("hidden");
       }
+
+      nextBtn.classList.remove("hidden");
     };
 
     cEl.appendChild(btn);
@@ -94,88 +104,66 @@ function load(){
 }
 
 /* =====================
-   記述表示
-===================== */
-function showText(){
-  textVisible = true;
-  textBox.classList.remove("hidden");
-
-  inputEl.oninput = () => {
-    if(inputEl.value.trim().length > 0){
-      showAnswer();
-    } else {
-      nextBtn.classList.add("hidden");
-    }
-  };
-}
-
-/* =====================
-   記述非表示
-===================== */
-function hideText(){
-  textVisible = false;
-  textBox.classList.add("hidden");
-}
-
-/* =====================
-   回答ボタン
-===================== */
-function showAnswer(){
-  nextBtn.classList.remove("hidden");
-}
-
-/* =====================
-   回答確定（選択のみ採点）
+   回答確定
 ===================== */
 function submitAll(){
+
   const q = quiz[current];
+  if(selectedIndex === null) return;
 
-  const choiceCorrect = selectedIndex === q.correct;
+  const isCorrect = selectedIndex === q.correct;
 
-  if(choiceCorrect) scoreChoice++;
+  if(isCorrect) scoreChoice++;
 
-  answersLog.push({
-    id: q.id,
-    type: "choice",
-    input: q.choices[selectedIndex],
-    correct: choiceCorrect
+  /* UI反映 */
+  const buttons = [...cEl.children];
+
+  buttons.forEach((b,i)=>{
+    if(i === q.correct){
+      b.classList.add("correct");
+    }
+    if(i === selectedIndex && !isCorrect){
+      b.classList.add("wrong");
+    }
   });
 
-  /* 記述はログのみ */
-  const trigger = (q.trigger ?? "").toString().trim();
+  /* log（選択） */
+  logBuffer.push({
+    id: q.id,
+    type: "choice",
+    question: q.q,
+    input: q.choices[selectedIndex],
+    correct: isCorrect
+  });
 
-  if(trigger !== ""){
-    answersLog.push({
+  /* log（記述はあればだけ） */
+  if((q.trigger || "").toString().trim() !== ""){
+    logBuffer.push({
       id: q.id,
       type: "text",
-      input: inputEl.value.trim(),
+      question: q.textQ || "",
+      input: inputEl.value || "",
       correct: null
     });
   }
 
-  /* 正誤表示 */
-  const buttons = [...cEl.children];
-
-  buttons.forEach((btn,i)=>{
-    btn.classList.remove("selected");
-
-    if(i === q.correct){
-      btn.classList.add("correct");
-    }
-
-    if(i === selectedIndex && selectedIndex !== q.correct){
-      btn.classList.add("wrong");
-    }
+  /* GAS送信（確実） */
+  fetch(GAS_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      userId,
+      log: logBuffer.slice(-2)
+    })
   });
 
   nextBtn.textContent = "次へ";
-  nextBtn.onclick = goNext;
+  nextBtn.onclick = next;
 }
 
 /* =====================
    次へ
 ===================== */
-function goNext(){
+function next(){
   current++;
   if(current >= quiz.length){
     finish();
@@ -209,3 +197,4 @@ function finish(){
 
 /* expose */
 window.startQuiz = startQuiz;
+window.submitAll = submitAll;
