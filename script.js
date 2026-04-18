@@ -43,7 +43,7 @@ async function init(){
 }
 
 /* =====================
-   UIリセット（ここ重要修正版）
+   UIリセット
 ===================== */
 function resetUI(){
   selectedIndex = null;
@@ -53,7 +53,6 @@ function resetUI(){
   nextBtn.textContent = "回答";
   nextBtn.disabled = true;
 
-  // 記述UI完全リセット
   textBox.classList.add("hidden");
   textBox.classList.remove("correct","wrong");
 
@@ -96,7 +95,7 @@ function load(){
 }
 
 /* =====================
-   メイン処理
+   メイン
 ===================== */
 function next(){
   const q = quiz[current];
@@ -185,7 +184,6 @@ function submitText(){
   const input = document.getElementById("text-input");
   input.disabled = true;
 
-  // ★ここが重要（完全修正版）
   textBox.classList.remove("hidden");
   textBox.classList.remove("correct","wrong");
   textBox.classList.add(ok ? "correct" : "wrong");
