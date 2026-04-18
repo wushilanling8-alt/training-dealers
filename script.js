@@ -17,13 +17,9 @@ const textBox = document.getElementById("text-box");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
-// ===== ローディング =====
-function setLoading(flag){
-  nextBtn.disabled = flag;
-  nextBtn.style.opacity = flag ? "0.5" : "1";
-}
-
-// ===== 開始 =====
+/* =====================
+   開始
+===================== */
 function startQuiz(){
   const name = document.getElementById("username").value.trim();
   if(!name) return alert("名前入れて");
@@ -36,43 +32,50 @@ function startQuiz(){
   init();
 }
 
-// ===== 初期化 =====
+/* =====================
+   初期化
+===================== */
 async function init(){
-  setLoading(true);
   qEl.textContent = "読み込み中...";
 
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
 
-  setLoading(false);
   load();
 }
 
-// ===== 表示 =====
+/* =====================
+   問題表示
+===================== */
 function load(){
   answered = false;
   selectedIndex = null;
 
+  nextBtn.disabled = true;
   nextBtn.textContent = "回答";
+
   textBox.classList.add("hidden");
 
   const q = quiz[current];
 
   qEl.innerHTML = q.q.replace(/\n/g,"<br>");
   cEl.innerHTML = "";
+
   document.getElementById("text-input").value = "";
 
   q.choices.forEach((c,i)=>{
     const btn = document.createElement("button");
     btn.textContent = c;
 
-    btn.onclick = ()=>{
+    btn.onclick = () => {
       if(answered) return;
 
       selectedIndex = i;
 
-      [...cEl.children].forEach(b=>b.classList.remove("selected"));
+      [...cEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
+
+      nextBtn.disabled = false;
     };
 
     cEl.appendChild(btn);
@@ -81,23 +84,21 @@ function load(){
   updateProgress();
 }
 
-// ===== 回答 / 次へ =====
+/* =====================
+   回答 / 次へ
+===================== */
 function next(){
   const q = quiz[current];
 
-  // 回答フェーズ
   if(!answered){
-    if(selectedIndex === null){
-      alert("選択して");
-      return;
-    }
+    if(selectedIndex === null) return;
 
     answered = true;
 
     const isCorrect = selectedIndex === q.correct;
+
     if(isCorrect) score++;
 
-    // ログ
     answersLog.push({
       id: q.id,
       type: "choice",
@@ -106,10 +107,7 @@ function next(){
       correct: isCorrect
     });
 
-    // 視覚フィードバック（画面全体）
-    document.body.classList.add(isCorrect ? "correct" : "wrong");
-
-    // ボタン色
+    // ★UIは“選択肢だけ”で表現（全体変えない）
     [...cEl.children].forEach((btn,i)=>{
       if(i === q.correct){
         btn.classList.add("correct");
@@ -119,17 +117,15 @@ function next(){
       }
     });
 
-    // 条件付き記述
     if(q.trigger !== "" && selectedIndex == q.trigger){
       textBox.classList.remove("hidden");
     }
 
     nextBtn.textContent = "次へ";
+    nextBtn.disabled = false;
+
     return;
   }
-
-  // 次へ
-  document.body.classList.remove("correct","wrong");
 
   current++;
 
@@ -140,7 +136,9 @@ function next(){
   }
 }
 
-// ===== 記述 =====
+/* =====================
+   記述
+===================== */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
   const q = quiz[current];
@@ -162,13 +160,17 @@ function submitText(){
   if(ok) score++;
 }
 
-// ===== プログレス =====
+/* =====================
+   プログレス
+===================== */
 function updateProgress(){
-  const percent = ((current) / quiz.length) * 100;
+  const percent = (current / quiz.length) * 100;
   progress.style.width = percent + "%";
 }
 
-// ===== 終了 =====
+/* =====================
+   終了
+===================== */
 function finish(){
   document.getElementById("quiz-box").classList.add("hidden");
   result.classList.remove("hidden");
@@ -192,7 +194,7 @@ function finish(){
   });
 }
 
-// expose
+/* expose */
 window.startQuiz = startQuiz;
 window.next = next;
 window.submitText = submitText;
