@@ -4,7 +4,6 @@ let quiz = [];
 let current = 0;
 
 let selectedIndex = null;
-let phase = "select";
 
 let answersLog = [];
 
@@ -34,7 +33,9 @@ function startQuiz(){
 ===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
+
   nextBtn.classList.add("hidden");
+  textBox.classList.add("hidden");
 
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
@@ -47,15 +48,19 @@ async function init(){
 ===================== */
 function resetUI(){
   selectedIndex = null;
-  phase = "select";
 
   nextBtn.classList.add("hidden");
+  nextBtn.textContent = "回答";
+  nextBtn.disabled = true;
 
   textBox.classList.add("hidden");
   textBox.classList.remove("correct","wrong");
 
-  document.getElementById("text-input").value = "";
-  document.getElementById("text-input").disabled = false;
+  const input = document.getElementById("text-input");
+  input.value = "";
+  input.disabled = false;
+
+  nextBtn.onclick = handleAnswer;
 }
 
 /* =====================
@@ -74,27 +79,13 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
-      if(phase !== "select") return;
-
       selectedIndex = i;
 
       [...cEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
-      const trigger = (q.trigger ?? "").toString().trim();
-      const selected = selectedIndex.toString();
-
-      /* 記述あり */
-      if(trigger !== "" && trigger === selected){
-        phase = "text";
-
-        textBox.classList.remove("hidden");
-        document.getElementById("text-input").focus();
-
-        return;
-      }
-
-      showAnswerButton();
+      nextBtn.classList.remove("hidden");
+      nextBtn.disabled = false;
     };
 
     cEl.appendChild(btn);
@@ -104,30 +95,46 @@ function load(){
 }
 
 /* =====================
-   回答ボタン表示
+   回答処理（分岐だけ）
 ===================== */
-function showAnswerButton(){
-  phase = "answer";
+function handleAnswer(){
+  const q = quiz[current];
 
-  nextBtn.classList.remove("hidden");
-  nextBtn.textContent = "回答確定";
-  nextBtn.disabled = false;
-}
+  if(selectedIndex === null) return;
 
-/* =====================
-   回答確定
-===================== */
-function next(){
+  const trigger = (q.trigger ?? "").toString().trim();
+
+  /* =====================
+     記述あり → 記述フェーズ
+  ===================== */
+  if(trigger !== "" && trigger === selectedIndex.toString()){
+
+    textBox.classList.remove("hidden");
+    document.getElementById("text-input").focus();
+
+    nextBtn.textContent = "最終回答";
+    nextBtn.onclick = submitAll;
+
+    return;
+  }
+
+  /* =====================
+     記述なし → 即確定
+  ===================== */
   submitAll();
 }
 
 /* =====================
-   最終処理（ここが修正ポイント）
+   最終確定（ここが本体）
 ===================== */
 function submitAll(){
   const q = quiz[current];
 
+  const inputText = (document.getElementById("text-input")?.value || "").trim();
+
+  /* 選択判定 */
   const isChoiceCorrect = selectedIndex === q.correct;
+
   if(isChoiceCorrect) scoreChoice++;
 
   answersLog.push({
@@ -137,16 +144,21 @@ function submitAll(){
     correct: isChoiceCorrect
   });
 
+  /* =====================
+     記述判定（安全化）
+  ===================== */
   const trigger = (q.trigger ?? "").toString().trim();
 
   if(trigger !== ""){
-    const val = document.getElementById("text-input").value.trim();
 
-    const answers = String(q.textA || "")
+    const answers = String(q.textA ?? "")
       .split(",")
-      .map(a => a.trim().toLowerCase());
+      .map(a => a.replace(/\s/g,"").toLowerCase())
+      .filter(Boolean);
 
-    const ok = answers.includes(val.toLowerCase());
+    const userInput = inputText.replace(/\s/g,"").toLowerCase();
+
+    const ok = answers.includes(userInput);
 
     if(ok) scoreText++;
 
@@ -155,16 +167,14 @@ function submitAll(){
     answersLog.push({
       id: q.id,
       type: "text",
-      input: val,
+      input: inputText,
       correct: ok
     });
   }
 
   /* =====================
-     ★ここ重要：次へボタンを必ず出す
+     次へ表示（必ずここ通る）
   ===================== */
-  phase = "done";
-
   nextBtn.classList.remove("hidden");
   nextBtn.textContent = "次へ";
   nextBtn.disabled = false;
@@ -183,8 +193,6 @@ function goNext(){
   } else {
     load();
   }
-
-  nextBtn.onclick = next;
 }
 
 /* =====================
@@ -214,4 +222,3 @@ function finish(){
 
 /* expose */
 window.startQuiz = startQuiz;
-window.next = next;
