@@ -11,6 +11,10 @@ let scoreChoice = 0;
 let scoreText = 0;
 let totalText = 0;
 
+/* state管理 */
+let phase = "select"; 
+// select → text → answer → done
+
 /* DOM */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
@@ -46,17 +50,14 @@ async function init(){
 ===================== */
 function resetUI(){
   selectedIndex = null;
+  phase = "select";
 
   nextBtn.classList.add("hidden");
-  nextBtn.textContent = "回答";
-  nextBtn.disabled = true;
-
   textBox.classList.add("hidden");
   textBox.classList.remove("correct","wrong");
 
-  const input = document.getElementById("text-input");
-  input.value = "";
-  input.disabled = false;
+  document.getElementById("text-input").value = "";
+  document.getElementById("text-input").disabled = false;
 }
 
 /* =====================
@@ -75,13 +76,30 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
+      if(phase !== "select") return;
+
       selectedIndex = i;
 
       [...cEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
-      nextBtn.classList.remove("hidden");
-      nextBtn.disabled = false;
+      const trigger = (q.trigger ?? "").toString().trim();
+      const selected = selectedIndex.toString();
+
+      /* =====================
+         記述あり → text表示
+      ===================== */
+      if(trigger !== "" && trigger === selected){
+        phase = "text";
+
+        textBox.classList.remove("hidden");
+        document.getElementById("text-input").focus();
+
+        return;
+      }
+
+      /* 記述なし → 即回答ボタン表示 */
+      showAnswerButton();
     };
 
     cEl.appendChild(btn);
@@ -91,50 +109,31 @@ function load(){
 }
 
 /* =====================
-   回答（最終確定）
+   回答ボタン表示
+===================== */
+function showAnswerButton(){
+  phase = "answer";
+
+  nextBtn.classList.remove("hidden");
+  nextBtn.textContent = "回答";
+  nextBtn.disabled = false;
+}
+
+/* =====================
+   回答処理
 ===================== */
 function next(){
-  const q = quiz[current];
-
-  if(selectedIndex === null) return;
-
-  const trigger = (q.trigger ?? "").toString().trim();
-  const selected = selectedIndex.toString();
-
-  /* =====================
-     記述あり → 記述フェーズへ
-  ===================== */
-  if(trigger !== "" && trigger === selected){
-
-    textBox.classList.remove("hidden");
-    document.getElementById("text-input").focus();
-
-    nextBtn.textContent = "回答確定";
-    nextBtn.disabled = false;
-
-    // ★ここで「確定処理に移る」
-    nextBtn.onclick = submitAll;
-
-    return;
-  }
-
-  /* =====================
-     記述なし → 即確定
-  ===================== */
   submitAll();
 }
 
 /* =====================
-   最終確定処理
+   最終確定
 ===================== */
 function submitAll(){
   const q = quiz[current];
 
-  const textVal = document.getElementById("text-input").value.trim();
-
-  /* ---- 選択判定 ---- */
+  /* 選択判定 */
   const isChoiceCorrect = selectedIndex === q.correct;
-
   if(isChoiceCorrect) scoreChoice++;
 
   answersLog.push({
@@ -144,15 +143,17 @@ function submitAll(){
     correct: isChoiceCorrect
   });
 
-  /* ---- 記述判定（ある場合だけ） ---- */
-  const hasText = (q.trigger ?? "").toString().trim() !== "";
+  /* 記述がある場合のみ判定 */
+  const trigger = (q.trigger ?? "").toString().trim();
 
-  if(hasText){
+  if(trigger !== ""){
+    const val = document.getElementById("text-input").value.trim();
+
     const answers = String(q.textA || "")
       .split(",")
       .map(a => a.trim().toLowerCase());
 
-    const ok = answers.includes(textVal.toLowerCase());
+    const ok = answers.includes(val.toLowerCase());
 
     if(ok) scoreText++;
 
@@ -161,7 +162,7 @@ function submitAll(){
     answersLog.push({
       id: q.id,
       type: "text",
-      input: textVal,
+      input: val,
       correct: ok
     });
   }
@@ -173,9 +174,6 @@ function submitAll(){
     finish();
   } else {
     load();
-
-    // onclick戻す
-    nextBtn.onclick = next;
   }
 }
 
@@ -207,4 +205,3 @@ function finish(){
 /* expose */
 window.startQuiz = startQuiz;
 window.next = next;
-window.submitAll = submitAll;
