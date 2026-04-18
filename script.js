@@ -100,6 +100,9 @@ function load(){
 function next(){
   const q = quiz[current];
 
+  /* =====================
+     選択処理
+  ===================== */
   if(state === "choice"){
 
     if(selectedIndex === null) return;
@@ -130,24 +133,26 @@ function next(){
     });
 
     /* =====================
-       ★ここが修正ポイント
-       F列そのまま比較
+       記述判定（完全停止仕様）
     ===================== */
     const trigger = (q.trigger ?? "").toString().trim();
     const selected = selectedIndex.toString();
 
-    const needText = (trigger !== "" && selected === trigger);
+    const hasText = trigger !== "" && selected === trigger;
 
-    if(needText){
+    if(hasText){
       state = "text";
 
       textBox.classList.remove("hidden");
       document.getElementById("text-input").focus();
 
       nextBtn.classList.add("hidden");
+
+      // ★ここで完全停止（超重要）
       return;
     }
 
+    /* 記述なしなら次へ進行 */
     state = "done";
     nextBtn.textContent = "次へ";
     nextBtn.disabled = false;
@@ -155,6 +160,9 @@ function next(){
     return;
   }
 
+  /* =====================
+     次へ
+  ===================== */
   if(state === "done"){
     current++;
     if(current >= quiz.length){
@@ -166,7 +174,7 @@ function next(){
 }
 
 /* =====================
-   記述
+   記述回答
 ===================== */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
@@ -230,6 +238,7 @@ function finish(){
   `;
 }
 
+/* expose */
 window.startQuiz = startQuiz;
 window.next = next;
 window.submitText = submitText;
