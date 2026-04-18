@@ -4,6 +4,7 @@ let quiz = [];
 let current = 0;
 
 let selectedIndex = null;
+let textValue = "";
 
 let answersLog = [];
 
@@ -16,6 +17,7 @@ const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
 const textBox = document.getElementById("text-box");
+const inputEl = document.getElementById("text-input");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
@@ -34,9 +36,6 @@ function startQuiz(){
 async function init(){
   qEl.textContent = "読み込み中...";
 
-  nextBtn.classList.add("hidden");
-  textBox.classList.add("hidden");
-
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
 
@@ -48,19 +47,15 @@ async function init(){
 ===================== */
 function resetUI(){
   selectedIndex = null;
+  textValue = "";
 
   nextBtn.classList.add("hidden");
   nextBtn.textContent = "回答";
-  nextBtn.disabled = true;
+  nextBtn.onclick = submitAll;
 
   textBox.classList.add("hidden");
-  textBox.classList.remove("correct","wrong");
-
-  const input = document.getElementById("text-input");
-  input.value = "";
-  input.disabled = false;
-
-  nextBtn.onclick = handleAnswer;
+  inputEl.value = "";
+  inputEl.disabled = false;
 }
 
 /* =====================
@@ -84,8 +79,14 @@ function load(){
       [...cEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
-      nextBtn.classList.remove("hidden");
-      nextBtn.disabled = false;
+      const trigger = (q.trigger ?? "").toString().trim();
+
+      /* 記述ありなら表示 */
+      if(trigger !== "" && trigger === String(i)){
+        showTextBox();
+      } else {
+        showAnswerButton();
+      }
     };
 
     cEl.appendChild(btn);
@@ -95,46 +96,42 @@ function load(){
 }
 
 /* =====================
-   回答処理（分岐だけ）
+   記述表示
 ===================== */
-function handleAnswer(){
-  const q = quiz[current];
+function showTextBox(){
+  textBox.classList.remove("hidden");
 
-  if(selectedIndex === null) return;
+  inputEl.focus();
 
-  const trigger = (q.trigger ?? "").toString().trim();
+  inputEl.oninput = () => {
+    textValue = inputEl.value.trim();
 
-  /* =====================
-     記述あり → 記述フェーズ
-  ===================== */
-  if(trigger !== "" && trigger === selectedIndex.toString()){
-
-    textBox.classList.remove("hidden");
-    document.getElementById("text-input").focus();
-
-    nextBtn.textContent = "最終回答";
-    nextBtn.onclick = submitAll;
-
-    return;
-  }
-
-  /* =====================
-     記述なし → 即確定
-  ===================== */
-  submitAll();
+    if(textValue.length > 0){
+      showAnswerButton();
+    } else {
+      nextBtn.classList.add("hidden");
+    }
+  };
 }
 
 /* =====================
-   最終確定（ここが本体）
+   回答ボタン表示
+===================== */
+function showAnswerButton(){
+  nextBtn.classList.remove("hidden");
+  nextBtn.disabled = false;
+}
+
+/* =====================
+   回答確定
 ===================== */
 function submitAll(){
   const q = quiz[current];
 
-  const inputText = (document.getElementById("text-input")?.value || "").trim();
+  if(selectedIndex === null) return;
 
   /* 選択判定 */
   const isChoiceCorrect = selectedIndex === q.correct;
-
   if(isChoiceCorrect) scoreChoice++;
 
   answersLog.push({
@@ -144,21 +141,16 @@ function submitAll(){
     correct: isChoiceCorrect
   });
 
-  /* =====================
-     記述判定（安全化）
-  ===================== */
+  /* 記述判定 */
   const trigger = (q.trigger ?? "").toString().trim();
 
   if(trigger !== ""){
-
     const answers = String(q.textA ?? "")
       .split(",")
       .map(a => a.replace(/\s/g,"").toLowerCase())
       .filter(Boolean);
 
-    const userInput = inputText.replace(/\s/g,"").toLowerCase();
-
-    const ok = answers.includes(userInput);
+    const ok = answers.includes(textValue.replace(/\s/g,"").toLowerCase());
 
     if(ok) scoreText++;
 
@@ -167,23 +159,18 @@ function submitAll(){
     answersLog.push({
       id: q.id,
       type: "text",
-      input: inputText,
+      input: textValue,
       correct: ok
     });
   }
 
-  /* =====================
-     次へ表示（必ずここ通る）
-  ===================== */
-  nextBtn.classList.remove("hidden");
+  /* 次へ */
   nextBtn.textContent = "次へ";
-  nextBtn.disabled = false;
-
   nextBtn.onclick = goNext;
 }
 
 /* =====================
-   次へ進行
+   次へ
 ===================== */
 function goNext(){
   current++;
