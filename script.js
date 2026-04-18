@@ -3,7 +3,6 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbwvMREPiX2WvxVxKQD6eh13
 let quiz = [];
 let current = 0;
 let score = 0;
-let maxScore = 0;
 
 let selectedIndex = null;
 let answered = false;
@@ -16,14 +15,18 @@ const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
 const textBox = document.getElementById("text-box");
 const result = document.getElementById("result");
+const progress = document.getElementById("progress");
 
-// 開始
+// ===== ローディング =====
+function setLoading(flag){
+  nextBtn.disabled = flag;
+  nextBtn.style.opacity = flag ? "0.5" : "1";
+}
+
+// ===== 開始 =====
 function startQuiz(){
   const name = document.getElementById("username").value.trim();
-  if(!name){
-    alert("名前入れて");
-    return;
-  }
+  if(!name) return alert("名前入れて");
 
   userName = name;
 
@@ -33,26 +36,27 @@ function startQuiz(){
   init();
 }
 
-// 初期化
+// ===== 初期化 =====
 async function init(){
+  setLoading(true);
   qEl.textContent = "読み込み中...";
+
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
+
+  setLoading(false);
   load();
 }
 
-// 表示
+// ===== 表示 =====
 function load(){
   answered = false;
   selectedIndex = null;
 
   nextBtn.textContent = "回答";
-  nextBtn.classList.remove("hidden");
   textBox.classList.add("hidden");
 
   const q = quiz[current];
-
-  updateProgress();
 
   qEl.innerHTML = q.q.replace(/\n/g,"<br>");
   cEl.innerHTML = "";
@@ -74,10 +78,10 @@ function load(){
     cEl.appendChild(btn);
   });
 
-  maxScore++;
+  updateProgress();
 }
 
-// 回答 / 次へ
+// ===== 回答 / 次へ =====
 function next(){
   const q = quiz[current];
 
@@ -90,30 +94,34 @@ function next(){
 
     answered = true;
 
+    const isCorrect = selectedIndex === q.correct;
+    if(isCorrect) score++;
+
     // ログ
     answersLog.push({
       id: q.id,
       type: "choice",
       question: q.q,
       input: q.choices[selectedIndex],
-      correct: selectedIndex === q.correct
+      correct: isCorrect
     });
 
-    // 色付け
+    // 視覚フィードバック（画面全体）
+    document.body.classList.add(isCorrect ? "correct" : "wrong");
+
+    // ボタン色
     [...cEl.children].forEach((btn,i)=>{
       if(i === q.correct){
         btn.classList.add("correct");
-      } else if(i === selectedIndex){
+      }
+      if(i === selectedIndex && !isCorrect){
         btn.classList.add("wrong");
       }
     });
 
-    if(selectedIndex === q.correct) score++;
-
-    // 記述
+    // 条件付き記述
     if(q.trigger !== "" && selectedIndex == q.trigger){
       textBox.classList.remove("hidden");
-      maxScore++;
     }
 
     nextBtn.textContent = "次へ";
@@ -121,7 +129,10 @@ function next(){
   }
 
   // 次へ
+  document.body.classList.remove("correct","wrong");
+
   current++;
+
   if(current >= quiz.length){
     finish();
   } else {
@@ -129,42 +140,45 @@ function next(){
   }
 }
 
-// 記述回答
+// ===== 記述 =====
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
   const q = quiz[current];
 
-  const textA = String(q.textA || "");
-  const answers = textA.split(",").map(a=>a.trim().toLowerCase());
+  const answers = String(q.textA || "")
+    .split(",")
+    .map(a => a.trim().toLowerCase());
+
+  const ok = answers.includes(val.toLowerCase());
 
   answersLog.push({
     id: q.id,
     type: "text",
     question: q.textQ,
     input: val,
-    correct: answers.includes(val.toLowerCase())
+    correct: ok
   });
 
-  if(answers.includes(val.toLowerCase())) score++;
+  if(ok) score++;
 }
 
-// プログレス
+// ===== プログレス =====
 function updateProgress(){
-  const bar = document.getElementById("progress");
-  const percent = ((current+1)/quiz.length)*100;
-  bar.style.width = percent + "%";
+  const percent = ((current) / quiz.length) * 100;
+  progress.style.width = percent + "%";
 }
 
-// 終了
+// ===== 終了 =====
 function finish(){
   document.getElementById("quiz-box").classList.add("hidden");
   result.classList.remove("hidden");
 
-  const rate = Math.round(score/maxScore*100);
+  const rate = Math.round((score / quiz.length) * 100);
 
   result.innerHTML = `
+    <h2>結果</h2>
     正答率: ${rate}%<br>
-    (${score}/${maxScore})
+    (${score}/${quiz.length})
   `;
 
   fetch(GAS_URL,{
@@ -172,13 +186,13 @@ function finish(){
     body:JSON.stringify({
       userId: userName,
       correct: score,
-      total: maxScore,
+      total: quiz.length,
       log: answersLog
     })
   });
 }
 
-// グローバル化
+// expose
 window.startQuiz = startQuiz;
 window.next = next;
 window.submitText = submitText;
