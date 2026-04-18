@@ -19,14 +19,10 @@ body {
 h1 {
   text-align: center;
   font-size: 20px;
-  margin-bottom: 20px;
 }
 
-/* =========================
-   共通UI
-========================= */
-input,
-button {
+/* input & button */
+input, button {
   width: 100%;
   box-sizing: border-box;
   border-radius: 12px;
@@ -36,8 +32,6 @@ button {
 input {
   padding: 12px;
   border: 1px solid #ddd;
-  background: white;
-  outline: none;
   margin-bottom: 10px;
 }
 
@@ -47,80 +41,41 @@ button {
   background: #6c7cff;
   color: white;
   font-weight: bold;
-  cursor: pointer;
-  transition: 0.15s;
 }
 
-button:hover {
-  transform: scale(1.02);
-}
-
-/* =========================
-   選択肢
-========================= */
+/* choices */
 #choices button {
   margin-top: 10px;
   background: white;
   border: 1px solid #ddd;
   color: #333;
+  transition: 0.15s;
 }
 
-/* 選択中 */
+/* hover */
+button:hover {
+  transform: scale(1.02);
+}
+
+/* selected */
 .selected {
   border: 2px solid #6c7cff !important;
   box-shadow: 0 0 10px rgba(108,124,255,0.4);
 }
 
-/* 正解 */
+/* correct */
 .correct {
   background: #3ddc97 !important;
   color: white !important;
 }
 
-/* 不正解 */
+/* wrong */
 .wrong {
   background: #ff6b6b !important;
   color: white !important;
 }
 
-/* =========================
-   回答待ち
-========================= */
-#next.waiting {
-  background: #ffffff !important;
-  color: #333 !important;
-  border: 1px solid #ddd !important;
-}
-
-/* =========================
-   記述ボックス
-========================= */
-#text-box {
-  margin-top: 12px;
-  padding: 10px;
-  border-radius: 12px;
-  background: white;
-  border: 2px solid transparent;
-  transition: 0.2s;
-}
-
-#text-box.hidden {
-  display: none !important;
-}
-
-#text-box.correct {
-  border-color: #3ddc97 !important;
-  box-shadow: 0 0 10px rgba(61,220,151,0.4);
-}
-
-#text-box.wrong {
-  border-color: #ff6b6b !important;
-  box-shadow: 0 0 10px rgba(255,107,107,0.4);
-}
-
-/* =========================
-   プログレス
-========================= */
+/* progress */
 .progress-wrap {
   width: 100%;
   height: 6px;
@@ -134,9 +89,14 @@ button:hover {
   height: 100%;
   width: 0%;
   background: #6c7cff;
-  transition: 0.3s;
 }
 
+/* hidden */
 .hidden {
-  display: none !important;
+  display: none;
+}
+
+/* text box */
+#text-box {
+  margin-top: 10px;
 }
