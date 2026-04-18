@@ -10,9 +10,7 @@ let answered = false;
 let answersLog = [];
 let userName = "";
 
-/* =====================
-   DOM
-===================== */
+/* DOM */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
@@ -21,7 +19,7 @@ const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
 /* =====================
-   初期状態（読み込み中対策）
+   初期（読み込み中）
 ===================== */
 nextBtn.classList.add("hidden");
 
@@ -46,7 +44,7 @@ function startQuiz(){
 async function init(){
   qEl.textContent = "読み込み中...";
 
-  nextBtn.classList.add("hidden"); // ★読み込み中完全非表示
+  nextBtn.classList.add("hidden");
 
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
@@ -61,11 +59,13 @@ function load(){
   answered = false;
   selectedIndex = null;
 
-  nextBtn.classList.add("hidden"); // ★毎回リセット
+  nextBtn.classList.add("hidden");
   nextBtn.disabled = true;
   nextBtn.textContent = "回答";
 
+  // ★記述UIリセット（重要）
   textBox.classList.add("hidden");
+  textBox.style.border = "none";
 
   const input = document.getElementById("text-input");
   input.value = "";
@@ -88,7 +88,7 @@ function load(){
       [...cEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
-      nextBtn.classList.remove("hidden"); // ★ここで初表示
+      nextBtn.classList.remove("hidden");
       nextBtn.disabled = false;
     };
 
@@ -136,7 +136,7 @@ function next(){
     });
 
     /* =====================
-       trigger安全処理（完全版）
+       trigger処理（安全版）
     ===================== */
     const raw = String(q.trigger ?? "").trim();
     const triggerIndex = /^[0-9]+$/.test(raw) ? Number(raw) : null;
@@ -150,13 +150,24 @@ function next(){
       document.getElementById("text-input").focus();
 
       nextBtn.textContent = "回答待ち";
+
+      // ★白UI
+      nextBtn.style.background = "#ffffff";
+      nextBtn.style.color = "#333";
+      nextBtn.style.border = "1px solid #ddd";
+
       nextBtn.disabled = true;
 
       return;
     }
 
+    // 通常
     nextBtn.textContent = "次へ";
     nextBtn.disabled = false;
+
+    nextBtn.style.background = "#6c7cff";
+    nextBtn.style.color = "white";
+    nextBtn.style.border = "none";
 
     return;
   }
@@ -201,6 +212,10 @@ function submitText(){
 
   nextBtn.disabled = false;
   nextBtn.textContent = "次へ";
+
+  nextBtn.style.background = "#6c7cff";
+  nextBtn.style.color = "white";
+  nextBtn.style.border = "none";
 }
 
 /* =====================
