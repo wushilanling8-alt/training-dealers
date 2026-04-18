@@ -130,14 +130,29 @@ function next(){
     });
 
     /* =====================
-       ★ここが完全修正ポイント
-       triggerベースに変更
+       ★trigger完全厳密判定
     ===================== */
-    const trigger = Number(q.trigger);
+    const triggerRaw = q.trigger;
 
-    const needText =
-      !isNaN(trigger) &&
-      selectedIndex === trigger;
+    // 記述なし
+    if(triggerRaw === undefined || triggerRaw === null || triggerRaw === ""){
+      state = "done";
+      nextBtn.textContent = "次へ";
+      nextBtn.disabled = false;
+      return;
+    }
+
+    const triggerIndex = parseInt(triggerRaw, 10);
+
+    if(isNaN(triggerIndex)){
+      state = "done";
+      nextBtn.textContent = "次へ";
+      nextBtn.disabled = false;
+      return;
+    }
+
+    // ★ここが正しい条件
+    const needText = (selectedIndex === triggerIndex);
 
     if(needText){
       state = "text";
