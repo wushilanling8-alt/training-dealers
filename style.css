@@ -23,7 +23,7 @@ h1 {
 }
 
 /* =========================
-   input / button
+   共通UI
 ========================= */
 input,
 button {
@@ -75,7 +75,6 @@ button:hover {
 .correct {
   background: #3ddc97 !important;
   color: white !important;
-  box-shadow: 0 0 18px rgba(61,220,151,0.6);
 }
 
 /* 不正解 */
@@ -85,7 +84,7 @@ button:hover {
 }
 
 /* =========================
-   回答待ちボタン
+   回答待ち
 ========================= */
 #next.waiting {
   background: #ffffff !important;
@@ -101,8 +100,12 @@ button:hover {
   padding: 10px;
   border-radius: 12px;
   background: white;
-  transition: 0.2s;
   border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+#text-box.hidden {
+  display: none !important;
 }
 
 #text-box.correct {
@@ -114,6 +117,7 @@ button:hover {
   border-color: #ff6b6b !important;
   box-shadow: 0 0 10px rgba(255,107,107,0.4);
 }
+
 /* =========================
    プログレス
 ========================= */
@@ -133,7 +137,6 @@ button:hover {
   transition: 0.3s;
 }
 
-/* 非表示 */
 .hidden {
   display: none !important;
 }
