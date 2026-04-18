@@ -10,6 +10,9 @@ let answered = false;
 let answersLog = [];
 let userName = "";
 
+/* =====================
+   DOM
+===================== */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
@@ -17,7 +20,9 @@ const textBox = document.getElementById("text-box");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
-/* 開始 */
+/* =====================
+   開始
+===================== */
 function startQuiz(){
   const name = document.getElementById("username").value.trim();
   if(!name) return alert("名前入れて");
@@ -30,7 +35,9 @@ function startQuiz(){
   init();
 }
 
-/* 初期化 */
+/* =====================
+   初期読み込み
+===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
 
@@ -40,7 +47,9 @@ async function init(){
   load();
 }
 
-/* 表示 */
+/* =====================
+   問題表示
+===================== */
 function load(){
   answered = false;
   selectedIndex = null;
@@ -66,6 +75,7 @@ function load(){
 
       selectedIndex = i;
 
+      // すべてリセット → 選択だけ光らせる
       [...cEl.children].forEach(b => {
         b.classList.remove("selected");
       });
@@ -81,7 +91,9 @@ function load(){
   updateProgress();
 }
 
-/* 回答 */
+/* =====================
+   回答 / 次へ
+===================== */
 function next(){
   const q = quiz[current];
 
@@ -104,17 +116,27 @@ function next(){
     const buttons = [...cEl.children];
 
     buttons.forEach((btn,i)=>{
-      btn.classList.remove("selected");
 
+      // ★完全リセット（超重要）
+      btn.className = "";
+
+      // 正解は必ず発光
       if(i === q.correct){
-        btn.classList.add("correct"); // ★正解は発光
+        btn.classList.add("correct");
       }
 
+      // 不正解だった場合のみ押したやつ赤
       if(i === selectedIndex && !isCorrect){
-        btn.classList.add("wrong"); // ★不正解だけ赤
+        btn.classList.add("wrong");
+      }
+
+      // 正解を選んでた場合はそのままcorrect
+      if(i === selectedIndex && isCorrect){
+        btn.classList.add("correct");
       }
     });
 
+    // 記述条件
     if(q.trigger !== "" && selectedIndex == q.trigger){
       textBox.classList.remove("hidden");
     }
@@ -134,7 +156,9 @@ function next(){
   }
 }
 
-/* 記述 */
+/* =====================
+   記述回答
+===================== */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
   const q = quiz[current];
@@ -156,13 +180,17 @@ function submitText(){
   if(ok) score++;
 }
 
-/* プログレス */
+/* =====================
+   プログレス
+===================== */
 function updateProgress(){
   const percent = (current / quiz.length) * 100;
   progress.style.width = percent + "%";
 }
 
-/* 終了 */
+/* =====================
+   終了
+===================== */
 function finish(){
   document.getElementById("quiz-box").classList.add("hidden");
   result.classList.remove("hidden");
