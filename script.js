@@ -10,9 +10,7 @@ let answered = false;
 let answersLog = [];
 let userName = "";
 
-/* =====================
-   DOM
-===================== */
+/* DOM */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
@@ -20,9 +18,7 @@ const textBox = document.getElementById("text-box");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
-/* =====================
-   開始
-===================== */
+/* 開始 */
 function startQuiz(){
   const name = document.getElementById("username").value.trim();
   if(!name) return alert("名前入れて");
@@ -35,21 +31,15 @@ function startQuiz(){
   init();
 }
 
-/* =====================
-   初期ロード
-===================== */
+/* 読み込み */
 async function init(){
   qEl.textContent = "読み込み中...";
-
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
-
   load();
 }
 
-/* =====================
-   問題表示
-===================== */
+/* 問題表示 */
 function load(){
   answered = false;
   selectedIndex = null;
@@ -89,9 +79,7 @@ function load(){
   updateProgress();
 }
 
-/* =====================
-   回答 / 次へ
-===================== */
+/* 回答 */
 function next(){
   const q = quiz[current];
 
@@ -130,23 +118,20 @@ function next(){
     });
 
     /* =====================
-       記述トリガー（修正版・ここが本体）
+       🔥 修正ポイント（ここが本体）
     ===================== */
     const triggerIndex = Number(q.trigger);
 
-    if (
-      q.trigger !== undefined &&
-      q.trigger !== null &&
-      !isNaN(triggerIndex) &&
-      selectedIndex === triggerIndex
-    ) {
-      textBox.classList.remove("hidden");
+    const needText =
+      Number.isInteger(triggerIndex) &&
+      selectedIndex === triggerIndex;
 
+    if(needText){
+      textBox.classList.remove("hidden");
       document.getElementById("text-input").focus();
 
       nextBtn.disabled = true;
       nextBtn.textContent = "回答待ち";
-
       return;
     }
 
@@ -165,9 +150,7 @@ function next(){
   }
 }
 
-/* =====================
-   記述回答
-===================== */
+/* 記述 */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
   const q = quiz[current];
@@ -198,17 +181,13 @@ function submitText(){
   nextBtn.textContent = "次へ";
 }
 
-/* =====================
-   プログレス
-===================== */
+/* プログレス */
 function updateProgress(){
   const percent = (current / quiz.length) * 100;
   progress.style.width = percent + "%";
 }
 
-/* =====================
-   終了
-===================== */
+/* 終了 */
 function finish(){
   document.getElementById("quiz-box").classList.add("hidden");
   result.classList.remove("hidden");
