@@ -10,6 +10,9 @@ let answered = false;
 let answersLog = [];
 let userName = "";
 
+/* =====================
+   DOM
+===================== */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
@@ -33,7 +36,7 @@ function startQuiz(){
 }
 
 /* =====================
-   読み込み
+   初期ロード
 ===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
@@ -92,9 +95,6 @@ function load(){
 function next(){
   const q = quiz[current];
 
-  /* =====================
-     回答フェーズ
-  ===================== */
   if(!answered){
     if(selectedIndex === null) return;
 
@@ -130,11 +130,23 @@ function next(){
     });
 
     /* =====================
-       記述問題トリガー（ここ復活）
+       記述トリガー（修正版・ここが本体）
     ===================== */
-    if(q.trigger !== "" && selectedIndex == q.trigger){
+    const triggerIndex = Number(q.trigger);
+
+    if (
+      q.trigger !== undefined &&
+      q.trigger !== null &&
+      !isNaN(triggerIndex) &&
+      selectedIndex === triggerIndex
+    ) {
       textBox.classList.remove("hidden");
-      nextBtn.disabled = true; // 記述入力待ち
+
+      document.getElementById("text-input").focus();
+
+      nextBtn.disabled = true;
+      nextBtn.textContent = "回答待ち";
+
       return;
     }
 
@@ -144,9 +156,6 @@ function next(){
     return;
   }
 
-  /* =====================
-     次へ
-  ===================== */
   current++;
 
   if(current >= quiz.length){
