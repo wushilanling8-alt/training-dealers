@@ -34,13 +34,16 @@ function startQuiz(){
 ===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
+  nextBtn.classList.add("hidden");
+
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
+
   load();
 }
 
 /* =====================
-   初期化
+   UIリセット（ここ重要修正版）
 ===================== */
 function resetUI(){
   selectedIndex = null;
@@ -50,18 +53,13 @@ function resetUI(){
   nextBtn.textContent = "回答";
   nextBtn.disabled = true;
 
-  textBox.classList.remove("correct");
-textBox.classList.remove("wrong");
-
-if(ok){
-  textBox.classList.add("correct");
-} else {
-  textBox.classList.add("wrong");
-}
+  // 記述UI完全リセット
+  textBox.classList.add("hidden");
   textBox.classList.remove("correct","wrong");
 
-  document.getElementById("text-input").value = "";
-  document.getElementById("text-input").disabled = false;
+  const input = document.getElementById("text-input");
+  input.value = "";
+  input.disabled = false;
 }
 
 /* =====================
@@ -72,7 +70,7 @@ function load(){
 
   const q = quiz[current];
 
-  qEl.innerHTML = q.q.replace(/\n/g,"<br>");
+  qEl.innerHTML = (q.q || "").replace(/\n/g,"<br>");
   cEl.innerHTML = "";
 
   q.choices.forEach((c,i)=>{
@@ -98,14 +96,11 @@ function load(){
 }
 
 /* =====================
-   メイン
+   メイン処理
 ===================== */
 function next(){
   const q = quiz[current];
 
-  /* =====================
-     選択回答
-  ===================== */
   if(state === "choice"){
 
     if(selectedIndex === null) return;
@@ -135,9 +130,6 @@ function next(){
       }
     });
 
-    /* =====================
-       記述ありチェック
-    ===================== */
     const hasText = q.textQ && q.textQ.trim() !== "";
 
     if(hasText){
@@ -157,9 +149,6 @@ function next(){
     return;
   }
 
-  /* =====================
-     次へ
-  ===================== */
   if(state === "done"){
     current++;
     if(current >= quiz.length){
@@ -193,8 +182,12 @@ function submitText(){
   totalText++;
   if(ok) scoreText++;
 
-  document.getElementById("text-input").disabled = true;
+  const input = document.getElementById("text-input");
+  input.disabled = true;
 
+  // ★ここが重要（完全修正版）
+  textBox.classList.remove("hidden");
+  textBox.classList.remove("correct","wrong");
   textBox.classList.add(ok ? "correct" : "wrong");
 
   state = "done";
