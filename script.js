@@ -129,9 +129,17 @@ function next(){
       }
     });
 
-    const hasText = q.textQ && q.textQ.trim() !== "";
+    /* =====================
+       ★ここが完全修正ポイント
+       triggerベースに変更
+    ===================== */
+    const trigger = Number(q.trigger);
 
-    if(hasText){
+    const needText =
+      !isNaN(trigger) &&
+      selectedIndex === trigger;
+
+    if(needText){
       state = "text";
 
       textBox.classList.remove("hidden");
