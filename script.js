@@ -96,7 +96,6 @@ function next(){
     answered = true;
 
     const isCorrect = selectedIndex === q.correct;
-
     if(isCorrect) score++;
 
     answersLog.push({
@@ -107,13 +106,11 @@ function next(){
       correct: isCorrect
     });
 
-    // ★UIは“選択肢だけ”で表現（全体変えない）
-    [...cEl.children].forEach((btn,i)=>{
-      if(i === q.correct){
-        btn.classList.add("correct");
-      }
-      if(i === selectedIndex && !isCorrect){
-        btn.classList.add("wrong");
+    const buttons = [...cEl.children];
+
+    buttons.forEach((btn,i)=>{
+      if(i === selectedIndex){
+        btn.classList.add(isCorrect ? "correct" : "wrong");
       }
     });
 
