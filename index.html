@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>練習会問題</title>
 
 <link rel="stylesheet" href="style.css">
@@ -9,17 +10,17 @@
 <body>
 
 <div class="container">
+
   <h1>練習会問題</h1>
-</div>
 
-<div class="progress-wrap">
-  <div id="progress"></div>
-
+  <!-- 名前入力 -->
   <div id="name-box">
-  <input id="username" placeholder="名前を入力">
-  <button onclick="startQuiz()">開始</button></div>
-  
-  <div id="quiz-box">
+    <input id="username" placeholder="名前を入力">
+    <button onclick="startQuiz()">開始</button>
+  </div>
+
+  <!-- クイズ -->
+  <div id="quiz-box" class="hidden">
     <p id="question"></p>
     <div id="choices"></div>
 
@@ -28,10 +29,17 @@
       <button onclick="submitText()">回答</button>
     </div>
 
-    <button id="next" class="hidden" onclick="next()">次へ</button>
+    <button id="next" onclick="next()">回答</button>
+
+    <!-- プログレスバー -->
+    <div class="progress-wrap">
+      <div id="progress"></div>
+    </div>
   </div>
 
+  <!-- 結果 -->
   <div id="result" class="hidden"></div>
+
 </div>
 
 <script src="script.js"></script>
