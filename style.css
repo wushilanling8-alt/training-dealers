@@ -5,7 +5,6 @@ body {
   color: #333;
 }
 
-/* レイアウト */
 .container {
   max-width: 420px;
   height: 100vh;
@@ -17,14 +16,12 @@ body {
   box-sizing: border-box;
 }
 
-/* タイトル */
 h1 {
   text-align: center;
   font-size: 20px;
   margin-bottom: 20px;
 }
 
-/* 入力 */
 input {
   width: 100%;
   padding: 10px;
@@ -34,7 +31,6 @@ input {
   margin-bottom: 10px;
 }
 
-/* ボタン */
 button {
   width: 100%;
   padding: 12px;
@@ -46,18 +42,6 @@ button {
   cursor: pointer;
 }
 
-/* 無効ボタン */
-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* 問題 */
-#question {
-  font-size: 18px;
-  margin-bottom: 16px;
-}
-
 /* 選択肢 */
 #choices button {
   width: 100%;
@@ -65,10 +49,9 @@ button:disabled {
   padding: 12px;
   border-radius: 12px;
   border: none;
-  background: #fff;
+  background: white;
   border: 1px solid #ddd;
-  color: #333;
-  transition: 0.15s;
+  transition: 0.2s;
 }
 
 /* hover */
@@ -76,26 +59,24 @@ button:disabled {
   transform: scale(1.02);
 }
 
-/* 選択中 */
+/* 選択中（まだ回答前） */
 .selected {
   background: #6c7cff !important;
   color: white;
-  border: none;
 }
 
-/* 正解（控えめ） */
+/* 正解 */
 .correct {
-  border: 2px solid #3ddc97 !important;
+  background: #3ddc97 !important;
+  color: white;
+  border: none !important;
 }
 
-/* 不正解（控えめ） */
+/* 不正解 */
 .wrong {
-  border: 2px solid #ff6b6b !important;
-}
-
-/* 記述 */
-#text-box {
-  margin-top: 12px;
+  background: #ff6b6b !important;
+  color: white;
+  border: none !important;
 }
 
 /* プログレス */
@@ -115,7 +96,6 @@ button:disabled {
   transition: 0.3s;
 }
 
-/* 非表示 */
 .hidden {
   display: none;
 }
