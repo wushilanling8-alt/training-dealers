@@ -39,7 +39,12 @@ button {
   background: #6c7cff;
   color: white;
   font-weight: bold;
-  cursor: pointer;
+}
+
+/* 問題 */
+#question {
+  font-size: 18px;
+  margin-bottom: 16px;
 }
 
 /* 選択肢 */
@@ -51,28 +56,23 @@ button {
   border: none;
   background: white;
   border: 1px solid #ddd;
-  transition: 0.2s;
+  transition: 0.15s;
 }
 
-/* hover */
-#choices button:hover {
-  transform: scale(1.02);
-}
-
-/* 選択中（まだ回答前） */
+/* 選択中 */
 .selected {
   background: #6c7cff !important;
   color: white;
 }
 
-/* 正解 */
+/* 正解（押したものだけ） */
 .correct {
   background: #3ddc97 !important;
   color: white;
   border: none !important;
 }
 
-/* 不正解 */
+/* 不正解（押したものだけ） */
 .wrong {
   background: #ff6b6b !important;
   color: white;
