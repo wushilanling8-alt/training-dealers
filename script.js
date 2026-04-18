@@ -8,11 +8,9 @@ let selectedIndex = null;
 let state = "select";
 
 let scoreChoice = 0;
-
-let userName = "";
+let userId = "";
 let logBuffer = [];
 
-/* DOM */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
@@ -25,8 +23,8 @@ const progress = document.getElementById("progress");
    開始
 ===================== */
 function startQuiz(){
-  userName = document.getElementById("username").value.trim();
-  if(!userName) return alert("名前入れて");
+  userId = document.getElementById("username").value.trim();
+  if(!userId) return alert("名前入れて");
 
   document.getElementById("name-box").classList.add("hidden");
   document.getElementById("quiz-box").classList.remove("hidden");
@@ -55,7 +53,7 @@ function reset(){
   inputEl.value = "";
 
   nextBtn.classList.add("hidden");
-  nextBtn.textContent = "回答";
+  nextBtn.onclick = submit;
 
   [...cEl.children].forEach(b=>{
     b.classList.remove("selected","correct","wrong");
@@ -78,10 +76,11 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
+
       selectedIndex = i;
 
       [...cEl.children].forEach(b=>{
-        b.classList.remove("selected","correct","wrong");
+        b.classList.remove("selected");
       });
 
       btn.classList.add("selected");
@@ -106,7 +105,9 @@ function load(){
 /* =====================
    回答確定
 ===================== */
-function submitAll(){
+function submit(){
+
+  if(state !== "select") return;
 
   const q = quiz[current];
   if(selectedIndex === null) return;
@@ -127,7 +128,7 @@ function submitAll(){
     }
   });
 
-  /* log（選択） */
+  /* log */
   logBuffer.push({
     id: q.id,
     type: "choice",
@@ -136,18 +137,15 @@ function submitAll(){
     correct: isCorrect
   });
 
-  /* log（記述はあればだけ） */
   if((q.trigger || "").toString().trim() !== ""){
     logBuffer.push({
       id: q.id,
       type: "text",
-      question: q.textQ || "",
       input: inputEl.value || "",
       correct: null
     });
   }
 
-  /* GAS送信（確実） */
   fetch(GAS_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -155,6 +153,8 @@ function submitAll(){
       log: logBuffer.slice(-2)
     })
   });
+
+  state = "done";
 
   nextBtn.textContent = "次へ";
   nextBtn.onclick = next;
@@ -197,4 +197,4 @@ function finish(){
 
 /* expose */
 window.startQuiz = startQuiz;
-window.submitAll = submitAll;
+window.submit = submit;
