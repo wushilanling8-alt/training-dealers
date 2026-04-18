@@ -3,14 +3,13 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbwrUjxTJlBgwBDZ_1vsX_d6
 let quiz = [];
 let current = 0;
 
+let selectedIndex = null;
+
+let answersLog = [];
+
 let scoreChoice = 0;
 let scoreText = 0;
 let totalText = 0;
-
-let selectedIndex = null;
-let state = "choice";
-
-let answersLog = [];
 
 /* DOM */
 const qEl = document.getElementById("question");
@@ -43,11 +42,10 @@ async function init(){
 }
 
 /* =====================
-   リセット
+   初期化
 ===================== */
 function resetUI(){
   selectedIndex = null;
-  state = "choice";
 
   nextBtn.classList.add("hidden");
   nextBtn.textContent = "回答";
@@ -77,8 +75,6 @@ function load(){
     btn.textContent = c;
 
     btn.onclick = () => {
-      if(state !== "choice") return;
-
       selectedIndex = i;
 
       [...cEl.children].forEach(b => b.classList.remove("selected"));
@@ -95,127 +91,99 @@ function load(){
 }
 
 /* =====================
-   メイン
+   回答（最終確定）
 ===================== */
 function next(){
   const q = quiz[current];
 
+  if(selectedIndex === null) return;
+
+  const trigger = (q.trigger ?? "").toString().trim();
+  const selected = selectedIndex.toString();
+
   /* =====================
-     選択処理
+     記述あり → 記述フェーズへ
   ===================== */
-  if(state === "choice"){
+  if(trigger !== "" && trigger === selected){
 
-    if(selectedIndex === null) return;
+    textBox.classList.remove("hidden");
+    document.getElementById("text-input").focus();
 
-    const isCorrect = selectedIndex === q.correct;
-
-    answersLog.push({
-      id: q.id,
-      type: "choice",
-      input: q.choices[selectedIndex],
-      correct: isCorrect
-    });
-
-    if(isCorrect) scoreChoice++;
-
-    const buttons = [...cEl.children];
-
-    buttons.forEach((btn,i)=>{
-      btn.classList.remove("selected");
-
-      if(i === q.correct){
-        btn.classList.add("correct");
-      }
-
-      if(i === selectedIndex && !isCorrect){
-        btn.classList.add("wrong");
-      }
-    });
-
-    /* =====================
-       記述判定（完全停止仕様）
-    ===================== */
-    const trigger = (q.trigger ?? "").toString().trim();
-    const selected = selectedIndex.toString();
-
-    const hasText = trigger !== "" && selected === trigger;
-
-    if(hasText){
-      state = "text";
-
-      textBox.classList.remove("hidden");
-      document.getElementById("text-input").focus();
-
-      nextBtn.classList.add("hidden");
-
-      // ★ここで完全停止（超重要）
-      return;
-    }
-
-    /* 記述なしなら次へ進行 */
-    state = "done";
-    nextBtn.textContent = "次へ";
+    nextBtn.textContent = "回答確定";
     nextBtn.disabled = false;
+
+    // ★ここで「確定処理に移る」
+    nextBtn.onclick = submitAll;
 
     return;
   }
 
   /* =====================
-     次へ
+     記述なし → 即確定
   ===================== */
-  if(state === "done"){
-    current++;
-    if(current >= quiz.length){
-      finish();
-    } else {
-      load();
-    }
-  }
+  submitAll();
 }
 
 /* =====================
-   記述回答
+   最終確定処理
 ===================== */
-function submitText(){
-  const val = document.getElementById("text-input").value.trim();
+function submitAll(){
   const q = quiz[current];
 
-  const answers = String(q.textA || "")
-    .split(",")
-    .map(a => a.trim().toLowerCase());
+  const textVal = document.getElementById("text-input").value.trim();
 
-  const ok = answers.includes(val.toLowerCase());
+  /* ---- 選択判定 ---- */
+  const isChoiceCorrect = selectedIndex === q.correct;
+
+  if(isChoiceCorrect) scoreChoice++;
 
   answersLog.push({
     id: q.id,
-    type: "text",
-    input: val,
-    correct: ok
+    type: "choice",
+    input: q.choices[selectedIndex],
+    correct: isChoiceCorrect
   });
 
-  totalText++;
-  if(ok) scoreText++;
+  /* ---- 記述判定（ある場合だけ） ---- */
+  const hasText = (q.trigger ?? "").toString().trim() !== "";
 
-  const input = document.getElementById("text-input");
-  input.disabled = true;
+  if(hasText){
+    const answers = String(q.textA || "")
+      .split(",")
+      .map(a => a.trim().toLowerCase());
 
-  textBox.classList.remove("hidden");
-  textBox.classList.remove("correct","wrong");
-  textBox.classList.add(ok ? "correct" : "wrong");
+    const ok = answers.includes(textVal.toLowerCase());
 
-  state = "done";
+    if(ok) scoreText++;
 
-  nextBtn.classList.remove("hidden");
-  nextBtn.textContent = "次へ";
-  nextBtn.disabled = false;
+    totalText++;
+
+    answersLog.push({
+      id: q.id,
+      type: "text",
+      input: textVal,
+      correct: ok
+    });
+  }
+
+  /* 次へ */
+  current++;
+
+  if(current >= quiz.length){
+    finish();
+  } else {
+    load();
+
+    // onclick戻す
+    nextBtn.onclick = next;
+  }
 }
 
 /* =====================
    プログレス
 ===================== */
 function updateProgress(){
-  const percent = (current / quiz.length) * 100;
-  progress.style.width = percent + "%";
+  progress.style.width = (current / quiz.length) * 100 + "%";
 }
 
 /* =====================
@@ -226,9 +194,7 @@ function finish(){
   result.classList.remove("hidden");
 
   const total = quiz.length;
-  const totalCorrect = scoreChoice + scoreText;
-
-  const rate = Math.round((totalCorrect / (total + totalText)) * 100);
+  const rate = Math.round(((scoreChoice + scoreText) / total) * 100);
 
   result.innerHTML = `
     <h2>結果</h2>
@@ -241,4 +207,4 @@ function finish(){
 /* expose */
 window.startQuiz = startQuiz;
 window.next = next;
-window.submitText = submitText;
+window.submitAll = submitAll;
