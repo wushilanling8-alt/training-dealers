@@ -113,3 +113,12 @@ button:hover {
 .hidden {
   display: none;
 }
+
+
+#text-box {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: white;
+  transition: 0.2s;
+}
