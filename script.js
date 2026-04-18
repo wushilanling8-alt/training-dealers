@@ -19,11 +19,6 @@ const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
 /* =====================
-   初期（読み込み中）
-===================== */
-nextBtn.classList.add("hidden");
-
-/* =====================
    開始
 ===================== */
 function startQuiz(){
@@ -60,12 +55,14 @@ function load(){
   selectedIndex = null;
 
   nextBtn.classList.add("hidden");
+  nextBtn.classList.remove("waiting");
   nextBtn.disabled = true;
   nextBtn.textContent = "回答";
 
-  // ★記述UIリセット（重要）
+  // 記述リセット
+  textBox.classList.remove("correct");
+  textBox.classList.remove("wrong");
   textBox.classList.add("hidden");
-  textBox.style.border = "none";
 
   const input = document.getElementById("text-input");
   input.value = "";
@@ -99,7 +96,7 @@ function load(){
 }
 
 /* =====================
-   回答処理
+   回答
 ===================== */
 function next(){
   const q = quiz[current];
@@ -135,9 +132,7 @@ function next(){
       }
     });
 
-    /* =====================
-       trigger処理（安全版）
-    ===================== */
+    /* trigger */
     const raw = String(q.trigger ?? "").trim();
     const triggerIndex = /^[0-9]+$/.test(raw) ? Number(raw) : null;
 
@@ -147,27 +142,18 @@ function next(){
 
     if(needText){
       textBox.classList.remove("hidden");
+
       document.getElementById("text-input").focus();
 
+      nextBtn.classList.add("waiting");
       nextBtn.textContent = "回答待ち";
-
-      // ★白UI
-      nextBtn.style.background = "#ffffff";
-      nextBtn.style.color = "#333";
-      nextBtn.style.border = "1px solid #ddd";
-
       nextBtn.disabled = true;
 
       return;
     }
 
-    // 通常
     nextBtn.textContent = "次へ";
     nextBtn.disabled = false;
-
-    nextBtn.style.background = "#6c7cff";
-    nextBtn.style.color = "white";
-    nextBtn.style.border = "none";
 
     return;
   }
@@ -182,7 +168,7 @@ function next(){
 }
 
 /* =====================
-   記述回答
+   記述
 ===================== */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
@@ -206,16 +192,12 @@ function submitText(){
 
   document.getElementById("text-input").disabled = true;
 
-  textBox.style.border = ok
-    ? "2px solid #3ddc97"
-    : "2px solid #ff6b6b";
+  textBox.classList.remove("correct","wrong");
+  textBox.classList.add(ok ? "correct" : "wrong");
 
   nextBtn.disabled = false;
   nextBtn.textContent = "次へ";
-
-  nextBtn.style.background = "#6c7cff";
-  nextBtn.style.color = "white";
-  nextBtn.style.border = "none";
+  nextBtn.classList.remove("waiting");
 }
 
 /* =====================
