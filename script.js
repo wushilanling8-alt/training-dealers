@@ -17,9 +17,7 @@ const textBox = document.getElementById("text-box");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
-/* =====================
-   開始
-===================== */
+/* 開始 */
 function startQuiz(){
   const name = document.getElementById("username").value.trim();
   if(!name) return alert("名前入れて");
@@ -32,9 +30,7 @@ function startQuiz(){
   init();
 }
 
-/* =====================
-   初期化
-===================== */
+/* 初期化 */
 async function init(){
   qEl.textContent = "読み込み中...";
 
@@ -44,9 +40,7 @@ async function init(){
   load();
 }
 
-/* =====================
-   問題表示
-===================== */
+/* 表示 */
 function load(){
   answered = false;
   selectedIndex = null;
@@ -72,7 +66,10 @@ function load(){
 
       selectedIndex = i;
 
-      [...cEl.children].forEach(b => b.classList.remove("selected"));
+      [...cEl.children].forEach(b => {
+        b.classList.remove("selected");
+      });
+
       btn.classList.add("selected");
 
       nextBtn.disabled = false;
@@ -84,9 +81,7 @@ function load(){
   updateProgress();
 }
 
-/* =====================
-   回答 / 次へ
-===================== */
+/* 回答 */
 function next(){
   const q = quiz[current];
 
@@ -109,8 +104,14 @@ function next(){
     const buttons = [...cEl.children];
 
     buttons.forEach((btn,i)=>{
-      if(i === selectedIndex){
-        btn.classList.add(isCorrect ? "correct" : "wrong");
+      btn.classList.remove("selected");
+
+      if(i === q.correct){
+        btn.classList.add("correct"); // ★正解は発光
+      }
+
+      if(i === selectedIndex && !isCorrect){
+        btn.classList.add("wrong"); // ★不正解だけ赤
       }
     });
 
@@ -133,9 +134,7 @@ function next(){
   }
 }
 
-/* =====================
-   記述
-===================== */
+/* 記述 */
 function submitText(){
   const val = document.getElementById("text-input").value.trim();
   const q = quiz[current];
@@ -157,17 +156,13 @@ function submitText(){
   if(ok) score++;
 }
 
-/* =====================
-   プログレス
-===================== */
+/* プログレス */
 function updateProgress(){
   const percent = (current / quiz.length) * 100;
   progress.style.width = percent + "%";
 }
 
-/* =====================
-   終了
-===================== */
+/* 終了 */
 function finish(){
   document.getElementById("quiz-box").classList.add("hidden");
   result.classList.remove("hidden");
