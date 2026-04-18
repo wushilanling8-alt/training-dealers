@@ -4,7 +4,6 @@ let quiz = [];
 let current = 0;
 
 let selectedIndex = null;
-let textValue = "";
 
 let answersLog = [];
 
@@ -35,10 +34,8 @@ function startQuiz(){
 ===================== */
 async function init(){
   qEl.textContent = "読み込み中...";
-
   const res = await fetch(GAS_URL + "?type=questions");
   quiz = await res.json();
-
   load();
 }
 
@@ -47,15 +44,17 @@ async function init(){
 ===================== */
 function resetUI(){
   selectedIndex = null;
-  textValue = "";
 
   nextBtn.classList.add("hidden");
   nextBtn.textContent = "回答";
-  nextBtn.onclick = submitAll;
 
   textBox.classList.add("hidden");
+  textBox.classList.remove("correct","wrong");
+
   inputEl.value = "";
   inputEl.disabled = false;
+
+  nextBtn.onclick = submitAll;
 }
 
 /* =====================
@@ -81,11 +80,10 @@ function load(){
 
       const trigger = (q.trigger ?? "").toString().trim();
 
-      /* 記述ありなら表示 */
       if(trigger !== "" && trigger === String(i)){
-        showTextBox();
+        showText();
       } else {
-        showAnswerButton();
+        showAnswer();
       }
     };
 
@@ -98,16 +96,14 @@ function load(){
 /* =====================
    記述表示
 ===================== */
-function showTextBox(){
+function showText(){
   textBox.classList.remove("hidden");
-
   inputEl.focus();
 
+  // 入力監視 → 入力されたらボタン出す
   inputEl.oninput = () => {
-    textValue = inputEl.value.trim();
-
-    if(textValue.length > 0){
-      showAnswerButton();
+    if(inputEl.value.trim().length > 0){
+      showAnswer();
     } else {
       nextBtn.classList.add("hidden");
     }
@@ -117,7 +113,7 @@ function showTextBox(){
 /* =====================
    回答ボタン表示
 ===================== */
-function showAnswerButton(){
+function showAnswer(){
   nextBtn.classList.remove("hidden");
   nextBtn.disabled = false;
 }
@@ -128,29 +124,31 @@ function showAnswerButton(){
 function submitAll(){
   const q = quiz[current];
 
-  if(selectedIndex === null) return;
+  const choiceCorrect = selectedIndex === q.correct;
 
-  /* 選択判定 */
-  const isChoiceCorrect = selectedIndex === q.correct;
-  if(isChoiceCorrect) scoreChoice++;
+  if(choiceCorrect) scoreChoice++;
 
   answersLog.push({
     id: q.id,
     type: "choice",
     input: q.choices[selectedIndex],
-    correct: isChoiceCorrect
+    correct: choiceCorrect
   });
 
-  /* 記述判定 */
+  /* =====================
+     記述（ここが修正ポイント）
+  ===================== */
   const trigger = (q.trigger ?? "").toString().trim();
 
   if(trigger !== ""){
+    const val = inputEl.value.trim(); // ←毎回DOMから取得（重要）
+
     const answers = String(q.textA ?? "")
       .split(",")
       .map(a => a.replace(/\s/g,"").toLowerCase())
       .filter(Boolean);
 
-    const ok = answers.includes(textValue.replace(/\s/g,"").toLowerCase());
+    const ok = answers.includes(val.replace(/\s/g,"").toLowerCase());
 
     if(ok) scoreText++;
 
@@ -159,12 +157,11 @@ function submitAll(){
     answersLog.push({
       id: q.id,
       type: "text",
-      input: textValue,
+      input: val,
       correct: ok
     });
   }
 
-  /* 次へ */
   nextBtn.textContent = "次へ";
   nextBtn.onclick = goNext;
 }
