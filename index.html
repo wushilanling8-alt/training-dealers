@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>練習会問題</title>
+
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,28 +13,31 @@
 
   <h1>練習会問題</h1>
 
+  <!-- 名前 -->
   <div id="name-box">
     <input id="username" placeholder="名前を入力">
     <button onclick="startQuiz()">開始</button>
   </div>
 
+  <!-- クイズ -->
   <div id="quiz-box" class="hidden">
-
     <p id="question"></p>
     <div id="choices"></div>
 
+    <!-- 記述 -->
     <div id="text-box" class="hidden">
+      <p id="text-question"></p>
       <input id="text-input" placeholder="回答を入力">
     </div>
 
-    <button id="next" class="hidden" onclick="submitAll()">回答</button>
+    <button id="next" class="hidden">回答</button>
 
     <div class="progress-wrap">
       <div id="progress"></div>
     </div>
-
   </div>
 
+  <!-- 結果 -->
   <div id="result" class="hidden"></div>
 
 </div>
