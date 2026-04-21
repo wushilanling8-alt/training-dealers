@@ -1,5 +1,4 @@
-
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwF92XKX_im2BqGx8pz8VbzjDjc8pzS7z1AGA79h_NjMgdfhjbUOH4gHbPnIwansRcH4A/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxq_1gJ9E8nfzNm6_twY_8rw7G907xUDhu9fwIdmgHr9DLua8K9t_95AKtWIHx2QmgP-w/exec";
 
 let quiz = [];
 let current = 0;
@@ -9,12 +8,15 @@ let state = "select";
 
 let scoreChoice = 0;
 let userId = "";
-let logBuffer = [];
 
+let textAnswer = "";
+
+/* DOM */
 const qEl = document.getElementById("question");
 const cEl = document.getElementById("choices");
 const nextBtn = document.getElementById("next");
 const textBox = document.getElementById("text-box");
+const textQEl = document.getElementById("text-question");
 const inputEl = document.getElementById("text-input");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
@@ -48,11 +50,14 @@ async function init(){
 function reset(){
   selectedIndex = null;
   state = "select";
+  textAnswer = "";
 
   textBox.classList.add("hidden");
+  textQEl.textContent = "";
   inputEl.value = "";
 
   nextBtn.classList.add("hidden");
+  nextBtn.textContent = "回答";
   nextBtn.onclick = submit;
 
   [...cEl.children].forEach(b=>{
@@ -87,10 +92,15 @@ function load(){
 
       const trigger = (q.trigger || "").toString().trim();
 
+      /* 記述表示 */
       if(trigger !== "" && trigger === String(i)){
         textBox.classList.remove("hidden");
+        textQEl.textContent = q.textQ || "";
       } else {
         textBox.classList.add("hidden");
+        textQEl.textContent = "";
+        inputEl.value = "";
+        textAnswer = "";
       }
 
       nextBtn.classList.remove("hidden");
@@ -101,6 +111,13 @@ function load(){
 
   updateProgress();
 }
+
+/* =====================
+   入力保持
+===================== */
+inputEl.oninput = () => {
+  textAnswer = inputEl.value;
+};
 
 /* =====================
    回答確定
@@ -116,7 +133,7 @@ function submit(){
 
   if(isCorrect) scoreChoice++;
 
-  /* UI反映 */
+  /* 色 */
   const buttons = [...cEl.children];
 
   buttons.forEach((b,i)=>{
@@ -128,8 +145,10 @@ function submit(){
     }
   });
 
-  /* log */
-  logBuffer.push({
+  /* 送信ログ */
+  const sendLog = [];
+
+  sendLog.push({
     id: q.id,
     type: "choice",
     question: q.q,
@@ -137,11 +156,12 @@ function submit(){
     correct: isCorrect
   });
 
-  if((q.trigger || "").toString().trim() !== ""){
-    logBuffer.push({
+  if(textAnswer.trim() !== ""){
+    sendLog.push({
       id: q.id,
       type: "text",
-      input: inputEl.value || "",
+      question: q.textQ || "",
+      input: textAnswer.trim(),
       correct: null
     });
   }
@@ -150,7 +170,7 @@ function submit(){
     method: "POST",
     body: JSON.stringify({
       userId,
-      log: logBuffer.slice(-2)
+      log: sendLog
     })
   });
 
@@ -197,4 +217,3 @@ function finish(){
 
 /* expose */
 window.startQuiz = startQuiz;
-window.submit = submit;
